@@ -34,6 +34,19 @@ class Game {
         this.enemySpeed = 1;
         this.enemySize = 12;
         
+        // Enemy projectiles
+        this.projectiles = [];
+        this.lastProjectileTime = 0;
+        this.projectileSpeed = 2;
+        
+        // Power-ups (rayos amarillos)
+        this.powerUps = [];
+        this.powerUpSpawnRate = 8000; // 8 seconds
+        this.lastPowerUpSpawn = 0;
+        
+        // Particle effects
+        this.particles = [];
+        
         // Wave system
         this.currentWave = 1;
         this.waveEnemyCount = 5;
@@ -50,6 +63,20 @@ class Game {
         this.stunDuration = 2000;
         this.isStunActive = false;
         this.stunStartTime = 0;
+        
+        // New abilities
+        this.dashCooldown = 4000;
+        this.lastDashTime = 0;
+        this.dashDuration = 200;
+        this.isDashing = false;
+        this.dashStartTime = 0;
+        this.dashDirection = { x: 0, y: 0 };
+        
+        this.shieldCooldown = 8000;
+        this.lastShieldTime = 0;
+        this.shieldDuration = 3000;
+        this.hasShield = false;
+        this.shieldStartTime = 0;
         
         // Effects
         this.screenShake = false;
@@ -98,6 +125,10 @@ class Game {
                 this.useStun();
             } else if (e.key.toLowerCase() === 'e') {
                 this.useReload();
+            } else if (e.key.toLowerCase() === 'f') {
+                this.useDash();
+            } else if (e.key.toLowerCase() === 'c') {
+                this.useShield();
             } else if (e.key === ' ') {
                 e.preventDefault();
                 this.togglePause();
@@ -114,6 +145,14 @@ class Game {
         document.getElementById('stun-btn').addEventListener('click', () => this.useStun());
         document.getElementById('reload-btn').addEventListener('click', () => this.useReload());
         document.getElementById('restart-btn').addEventListener('click', () => this.restart());
+        
+        // New ability buttons
+        if (document.getElementById('dash-btn')) {
+            document.getElementById('dash-btn').addEventListener('click', () => this.useDash());
+        }
+        if (document.getElementById('shield-btn')) {
+            document.getElementById('shield-btn').addEventListener('click', () => this.useShield());
+        }
         
         // Mobile controls
         if (this.isMobile) {
@@ -181,6 +220,16 @@ class Game {
         document.getElementById('mobile-reload').addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.useReload();
+        });
+        
+        document.getElementById('mobile-dash').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.useDash();
+        });
+        
+        document.getElementById('mobile-shield').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.useShield();
         });
         
         document.getElementById('mobile-pause').addEventListener('touchstart', (e) => {
@@ -251,8 +300,20 @@ class Game {
         // Update enemies
         this.updateEnemies();
         
+        // Update projectiles
+        this.updateProjectiles();
+        
+        // Update power-ups
+        this.updatePowerUps();
+        
+        // Update particles
+        this.updateParticles();
+        
         // Spawn enemies
         this.spawnEnemies();
+        
+        // Spawn power-ups
+        this.spawnPowerUps();
         
         // Check collisions
         this.checkCollisions();
@@ -282,40 +343,63 @@ class Game {
         let dx = 0;
         let dy = 0;
         
-        // Handle keyboard input
-        if (this.keys['w'] || this.keys['arrowup']) dy -= 1;
-        if (this.keys['s'] || this.keys['arrowdown']) dy += 1;
-        if (this.keys['a'] || this.keys['arrowleft']) dx -= 1;
-        if (this.keys['d'] || this.keys['arrowright']) dx += 1;
-        
-        // Handle mobile touch input
-        if (this.touchInput.active) {
-            dx = this.touchInput.x;
-            dy = this.touchInput.y;
-        }
-        
-        // Normalize diagonal movement
-        if (dx !== 0 && dy !== 0) {
-            dx *= 0.707;
-            dy *= 0.707;
+        // Handle dash movement
+        if (this.isDashing) {
+            const currentTime = Date.now();
+            if (currentTime - this.dashStartTime < this.dashDuration) {
+                dx = this.dashDirection.x * this.player.speed * 3;
+                dy = this.dashDirection.y * this.player.speed * 3;
+            } else {
+                this.isDashing = false;
+            }
+        } else {
+            // Normal movement
+            // Handle keyboard input
+            if (this.keys['w'] || this.keys['arrowup']) dy -= 1;
+            if (this.keys['s'] || this.keys['arrowdown']) dy += 1;
+            if (this.keys['a'] || this.keys['arrowleft']) dx -= 1;
+            if (this.keys['d'] || this.keys['arrowright']) dx += 1;
+            
+            // Handle mobile touch input
+            if (this.touchInput.active) {
+                dx = this.touchInput.x;
+                dy = this.touchInput.y;
+            }
+            
+            // Normalize diagonal movement
+            if (dx !== 0 && dy !== 0) {
+                dx *= 0.707;
+                dy *= 0.707;
+            }
+            
+            // Apply normal speed
+            dx *= this.player.speed;
+            dy *= this.player.speed;
         }
         
         // Apply movement
-        this.player.x += dx * this.player.speed;
-        this.player.y += dy * this.player.speed;
+        this.player.x += dx;
+        this.player.y += dy;
         
         // Keep player in bounds
         this.player.x = Math.max(this.player.size, Math.min(this.width - this.player.size, this.player.x));
         this.player.y = Math.max(this.player.size, Math.min(this.height - this.player.size, this.player.y));
+        
+        // Update shield
+        if (this.hasShield && Date.now() - this.shieldStartTime > this.shieldDuration) {
+            this.hasShield = false;
+        }
     }
     
     updateEnemies() {
+        const currentTime = Date.now();
+        
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             
             if (enemy.stunned) {
                 // Check if stun has worn off
-                if (Date.now() - enemy.stunStartTime > this.stunDuration) {
+                if (currentTime - enemy.stunStartTime > this.stunDuration) {
                     enemy.stunned = false;
                 }
                 continue;
@@ -329,6 +413,14 @@ class Game {
             if (distance > 0) {
                 enemy.x += (dx / distance) * enemy.speed;
                 enemy.y += (dy / distance) * enemy.speed;
+            }
+            
+            // Shooter enemies shoot projectiles
+            if (enemy.type === 'shooter' && currentTime - enemy.lastShotTime > enemy.shootRate) {
+                if (distance < 150) { // Only shoot when close enough
+                    this.createProjectile(enemy.x, enemy.y, dx / distance, dy / distance);
+                    enemy.lastShotTime = currentTime;
+                }
             }
         }
     }
@@ -367,20 +459,62 @@ class Game {
                 break;
         }
         
-        this.enemies.push({
+        // Determine enemy type based on wave
+        const enemyType = this.getRandomEnemyType();
+        
+        const enemy = {
             x: x,
             y: y,
             size: this.enemySize,
             speed: this.enemySpeed,
-            color: '#ff4444',
             stunned: false,
-            stunStartTime: 0
-        });
+            stunStartTime: 0,
+            type: enemyType,
+            lastShotTime: 0,
+            health: 1
+        };
         
+        // Configure enemy based on type
+        switch (enemyType) {
+            case 'basic':
+                enemy.color = '#ff4444';
+                enemy.speed = this.enemySpeed;
+                break;
+            case 'fast':
+                enemy.color = '#44ff44';
+                enemy.speed = this.enemySpeed * 1.8;
+                enemy.size = this.enemySize * 0.8;
+                break;
+            case 'shooter':
+                enemy.color = '#4444ff';
+                enemy.speed = this.enemySpeed * 0.6;
+                enemy.size = this.enemySize * 1.2;
+                enemy.shootRate = 2000; // shoot every 2 seconds
+                break;
+        }
+        
+        this.enemies.push(enemy);
         this.enemiesSpawnedThisWave++;
     }
     
+    getRandomEnemyType() {
+        const wave = this.currentWave;
+        const rand = Math.random();
+        
+        if (wave <= 2) {
+            return 'basic';
+        } else if (wave <= 5) {
+            if (rand < 0.7) return 'basic';
+            else return 'fast';
+        } else {
+            if (rand < 0.5) return 'basic';
+            else if (rand < 0.8) return 'fast';
+            else return 'shooter';
+        }
+    }
+    
     checkCollisions() {
+        // Check enemy collisions
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             const dx = this.player.x - enemy.x;
@@ -388,9 +522,54 @@ class Game {
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance < this.player.size + enemy.size) {
-                this.endGame();
-                return;
+                if (this.hasShield) {
+                    // Shield absorbs the hit
+                    this.hasShield = false;
+                    this.enemies.splice(i, 1);
+                    this.createShieldParticles(this.player.x, this.player.y);
+                } else if (!this.isDashing) {
+                    this.endGame();
+                    return;
+                }
             }
+        }
+        
+        // Check projectile collisions
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const projectile = this.projectiles[i];
+            const dx = this.player.x - projectile.x;
+            const dy = this.player.y - projectile.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < this.player.size + projectile.size) {
+                if (this.hasShield) {
+                    // Shield absorbs the projectile
+                    this.projectiles.splice(i, 1);
+                    this.createShieldParticles(this.player.x, this.player.y);
+                } else if (!this.isDashing) {
+                    this.endGame();
+                    return;
+                } else {
+                    // Dash deflects projectiles
+                    this.projectiles.splice(i, 1);
+                }
+            }
+        }
+    }
+    
+    createShieldParticles(x, y) {
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 * i) / 6;
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * 4,
+                vy: Math.sin(angle) * 4,
+                life: 0.8,
+                maxLife: 0.8,
+                size: 4,
+                color: '#00ffff'
+            });
         }
     }
     
@@ -405,11 +584,17 @@ class Game {
         // Update button states
         const stunBtn = document.getElementById('stun-btn');
         const reloadBtn = document.getElementById('reload-btn');
+        const dashBtn = document.getElementById('dash-btn');
+        const shieldBtn = document.getElementById('shield-btn');
         const mobileStunBtn = document.getElementById('mobile-stun');
         const mobileReloadBtn = document.getElementById('mobile-reload');
+        const mobileDashBtn = document.getElementById('mobile-dash');
+        const mobileShieldBtn = document.getElementById('mobile-shield');
         
         const stunReady = currentTime - this.lastStunTime > this.stunCooldown;
         const reloadReady = currentTime - this.lastReloadTime > this.reloadCooldown;
+        const dashReady = currentTime - this.lastDashTime > this.dashCooldown;
+        const shieldReady = currentTime - this.lastShieldTime > this.shieldCooldown;
         
         // Desktop buttons
         stunBtn.disabled = !stunReady;
@@ -420,6 +605,18 @@ class Game {
         reloadBtn.className = reloadReady ? 'button' : 'button cooldown';
         reloadBtn.textContent = reloadReady ? 'Recargar (E)' : `Recargar (${Math.ceil((this.reloadCooldown - (currentTime - this.lastReloadTime)) / 1000)}s)`;
         
+        if (dashBtn) {
+            dashBtn.disabled = !dashReady;
+            dashBtn.className = dashReady ? 'button' : 'button cooldown';
+            dashBtn.textContent = dashReady ? 'Dash (F)' : `Dash (${Math.ceil((this.dashCooldown - (currentTime - this.lastDashTime)) / 1000)}s)`;
+        }
+        
+        if (shieldBtn) {
+            shieldBtn.disabled = !shieldReady;
+            shieldBtn.className = shieldReady ? 'button' : 'button cooldown';
+            shieldBtn.textContent = shieldReady ? 'Escudo (C)' : `Escudo (${Math.ceil((this.shieldCooldown - (currentTime - this.lastShieldTime)) / 1000)}s)`;
+        }
+        
         // Mobile buttons
         if (mobileStunBtn && mobileReloadBtn) {
             mobileStunBtn.disabled = !stunReady;
@@ -429,6 +626,18 @@ class Game {
             mobileReloadBtn.disabled = !reloadReady;
             mobileReloadBtn.className = reloadReady ? 'mobile-btn' : 'mobile-btn cooldown';
             mobileReloadBtn.textContent = reloadReady ? 'RELOAD' : Math.ceil((this.reloadCooldown - (currentTime - this.lastReloadTime)) / 1000);
+            
+            if (mobileDashBtn) {
+                mobileDashBtn.disabled = !dashReady;
+                mobileDashBtn.className = dashReady ? 'mobile-btn' : 'mobile-btn cooldown';
+                mobileDashBtn.textContent = dashReady ? 'DASH' : Math.ceil((this.dashCooldown - (currentTime - this.lastDashTime)) / 1000);
+            }
+            
+            if (mobileShieldBtn) {
+                mobileShieldBtn.disabled = !shieldReady;
+                mobileShieldBtn.className = shieldReady ? 'mobile-btn' : 'mobile-btn cooldown';
+                mobileShieldBtn.textContent = shieldReady ? 'SHIELD' : Math.ceil((this.shieldCooldown - (currentTime - this.lastShieldTime)) / 1000);
+            }
         }
     }
     
@@ -539,6 +748,53 @@ class Game {
         }
     }
     
+    useDash() {
+        const currentTime = Date.now();
+        
+        if (currentTime - this.lastDashTime > this.dashCooldown && this.player.energy >= 15) {
+            this.lastDashTime = currentTime;
+            this.isDashing = true;
+            this.dashStartTime = currentTime;
+            this.player.energy -= 15;
+            
+            // Determine dash direction based on current input
+            let dx = 0, dy = 0;
+            
+            if (this.keys['w'] || this.keys['arrowup']) dy -= 1;
+            if (this.keys['s'] || this.keys['arrowdown']) dy += 1;
+            if (this.keys['a'] || this.keys['arrowleft']) dx -= 1;
+            if (this.keys['d'] || this.keys['arrowright']) dx += 1;
+            
+            if (this.touchInput.active) {
+                dx = this.touchInput.x;
+                dy = this.touchInput.y;
+            }
+            
+            // Default forward if no input
+            if (dx === 0 && dy === 0) {
+                dy = -1; // dash upward by default
+            }
+            
+            // Normalize
+            const magnitude = Math.sqrt(dx * dx + dy * dy);
+            if (magnitude > 0) {
+                this.dashDirection.x = dx / magnitude;
+                this.dashDirection.y = dy / magnitude;
+            }
+        }
+    }
+    
+    useShield() {
+        const currentTime = Date.now();
+        
+        if (currentTime - this.lastShieldTime > this.shieldCooldown && this.player.energy >= 25) {
+            this.lastShieldTime = currentTime;
+            this.hasShield = true;
+            this.shieldStartTime = currentTime;
+            this.player.energy -= 25;
+        }
+    }
+    
     togglePause() {
         if (this.gameOver) return;
         
@@ -562,9 +818,24 @@ class Game {
         // Draw background grid
         this.drawGrid();
         
+        // Draw power-ups
+        for (const powerUp of this.powerUps) {
+            this.drawPowerUp(powerUp);
+        }
+        
         // Draw enemies
         for (const enemy of this.enemies) {
             this.drawEnemy(enemy);
+        }
+        
+        // Draw projectiles
+        for (const projectile of this.projectiles) {
+            this.drawProjectile(projectile);
+        }
+        
+        // Draw particles
+        for (const particle of this.particles) {
+            this.drawParticle(particle);
         }
         
         // Draw player
@@ -573,6 +844,10 @@ class Game {
         // Draw effects
         if (this.isStunActive) {
             this.drawStunEffect();
+        }
+        
+        if (this.hasShield) {
+            this.drawShieldEffect();
         }
         
         // Draw pause overlay
@@ -632,9 +907,21 @@ class Game {
             this.ctx.fillStyle = enemy.color;
         }
         
-        this.ctx.beginPath();
-        this.ctx.arc(enemy.x, enemy.y, enemy.size / 2, 0, Math.PI * 2);
-        this.ctx.fill();
+        // Draw different shapes for different enemy types
+        if (enemy.type === 'shooter') {
+            // Draw square for shooter enemies
+            this.ctx.fillRect(
+                enemy.x - enemy.size / 2,
+                enemy.y - enemy.size / 2,
+                enemy.size,
+                enemy.size
+            );
+        } else {
+            // Draw circle for other enemies
+            this.ctx.beginPath();
+            this.ctx.arc(enemy.x, enemy.y, enemy.size / 2, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
         
         // Draw stun indicator
         if (enemy.stunned) {
@@ -642,6 +929,15 @@ class Game {
             this.ctx.lineWidth = 2;
             this.ctx.beginPath();
             this.ctx.arc(enemy.x, enemy.y, enemy.size / 2 + 3, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+        
+        // Draw speed indicator for fast enemies
+        if (enemy.type === 'fast' && !enemy.stunned) {
+            this.ctx.strokeStyle = '#44ff44';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.arc(enemy.x, enemy.y, enemy.size / 2 + 2, 0, Math.PI * 2);
             this.ctx.stroke();
         }
     }
@@ -673,6 +969,68 @@ class Game {
         this.ctx.fillText('Presiona ESPACIO para continuar', this.width / 2, this.height / 2 + 30);
     }
     
+    drawProjectile(projectile) {
+        this.ctx.fillStyle = projectile.color;
+        this.ctx.beginPath();
+        this.ctx.arc(projectile.x, projectile.y, projectile.size, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Add glow effect
+        this.ctx.shadowColor = projectile.color;
+        this.ctx.shadowBlur = 10;
+        this.ctx.beginPath();
+        this.ctx.arc(projectile.x, projectile.y, projectile.size / 2, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.shadowBlur = 0;
+    }
+    
+    drawPowerUp(powerUp) {
+        // Draw lightning bolt shape
+        this.ctx.fillStyle = powerUp.color;
+        this.ctx.shadowColor = powerUp.color;
+        this.ctx.shadowBlur = 15 * powerUp.glowIntensity;
+        
+        // Simple lightning bolt shape
+        this.ctx.beginPath();
+        this.ctx.moveTo(powerUp.x - 6, powerUp.y - 8);
+        this.ctx.lineTo(powerUp.x + 2, powerUp.y - 8);
+        this.ctx.lineTo(powerUp.x - 4, powerUp.y);
+        this.ctx.lineTo(powerUp.x + 6, powerUp.y);
+        this.ctx.lineTo(powerUp.x - 2, powerUp.y + 8);
+        this.ctx.lineTo(powerUp.x + 4, powerUp.y + 8);
+        this.ctx.lineTo(powerUp.x + 4, powerUp.y);
+        this.ctx.lineTo(powerUp.x - 6, powerUp.y);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        this.ctx.shadowBlur = 0;
+    }
+    
+    drawParticle(particle) {
+        const alpha = particle.life / particle.maxLife;
+        this.ctx.fillStyle = particle.color + Math.floor(alpha * 255).toString(16).padStart(2, '0');
+        this.ctx.beginPath();
+        this.ctx.arc(particle.x, particle.y, particle.size * alpha, 0, Math.PI * 2);
+        this.ctx.fill();
+    }
+    
+    drawShieldEffect() {
+        const currentTime = Date.now();
+        const pulseIntensity = Math.sin((currentTime - this.shieldStartTime) / 200) * 0.3 + 0.7;
+        
+        this.ctx.strokeStyle = `rgba(0, 255, 255, ${pulseIntensity})`;
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.x, this.player.y, this.player.size + 8, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
+        this.ctx.strokeStyle = `rgba(0, 255, 255, ${pulseIntensity * 0.5})`;
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.x, this.player.y, this.player.size + 12, 0, Math.PI * 2);
+        this.ctx.stroke();
+    }
+    
     endGame() {
         this.gameOver = true;
         this.isRunning = false;
@@ -690,6 +1048,9 @@ class Game {
         this.isPaused = false;
         this.currentWave = 1;
         this.enemies = [];
+        this.projectiles = [];
+        this.powerUps = [];
+        this.particles = [];
         this.enemiesSpawnedThisWave = 0;
         this.enemiesKilledThisWave = 0;
         this.enemySpawnRate = 1000;
@@ -705,7 +1066,14 @@ class Game {
         // Reset abilities
         this.lastStunTime = 0;
         this.lastReloadTime = 0;
+        this.lastDashTime = 0;
+        this.lastShieldTime = 0;
         this.isStunActive = false;
+        this.isDashing = false;
+        this.hasShield = false;
+        
+        // Reset spawn timers
+        this.lastPowerUpSpawn = 0;
         
         // Reset effects
         this.stopScreenShake();
@@ -716,6 +1084,127 @@ class Game {
         
         // Restart game
         this.start();
+    }
+    
+    createProjectile(x, y, dirX, dirY) {
+        this.projectiles.push({
+            x: x,
+            y: y,
+            dirX: dirX,
+            dirY: dirY,
+            speed: this.projectileSpeed,
+            size: 4,
+            color: '#00aaff'
+        });
+    }
+    
+    updateProjectiles() {
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const projectile = this.projectiles[i];
+            
+            projectile.x += projectile.dirX * projectile.speed;
+            projectile.y += projectile.dirY * projectile.speed;
+            
+            // Remove projectiles that are off screen
+            if (projectile.x < -10 || projectile.x > this.width + 10 ||
+                projectile.y < -10 || projectile.y > this.height + 10) {
+                this.projectiles.splice(i, 1);
+            }
+        }
+    }
+    
+    spawnPowerUps() {
+        const currentTime = Date.now();
+        
+        if (currentTime - this.lastPowerUpSpawn > this.powerUpSpawnRate) {
+            this.spawnPowerUp();
+            this.lastPowerUpSpawn = currentTime;
+        }
+    }
+    
+    spawnPowerUp() {
+        // Spawn power-up in a safe area (not too close to player)
+        let x, y;
+        let attempts = 0;
+        
+        do {
+            x = Math.random() * (this.width - 40) + 20;
+            y = Math.random() * (this.height - 40) + 20;
+            attempts++;
+        } while (attempts < 10 && this.getDistance(x, y, this.player.x, this.player.y) < 80);
+        
+        this.powerUps.push({
+            x: x,
+            y: y,
+            size: 16,
+            color: '#ffff00',
+            glowIntensity: 0,
+            animationTime: 0,
+            energyBonus: 30
+        });
+    }
+    
+    updatePowerUps() {
+        for (let i = this.powerUps.length - 1; i >= 0; i--) {
+            const powerUp = this.powerUps[i];
+            
+            // Animate glow effect
+            powerUp.animationTime += 0.1;
+            powerUp.glowIntensity = Math.sin(powerUp.animationTime) * 0.5 + 0.5;
+            
+            // Check if player collects it
+            const distance = this.getDistance(powerUp.x, powerUp.y, this.player.x, this.player.y);
+            if (distance < powerUp.size) {
+                this.collectPowerUp(powerUp);
+                this.powerUps.splice(i, 1);
+            }
+        }
+    }
+    
+    collectPowerUp(powerUp) {
+        // Restore energy
+        this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + powerUp.energyBonus);
+        
+        // Create collection particles
+        this.createCollectionParticles(powerUp.x, powerUp.y);
+    }
+    
+    createCollectionParticles(x, y) {
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI * 2 * i) / 8;
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * 3,
+                vy: Math.sin(angle) * 3,
+                life: 1,
+                maxLife: 1,
+                size: 3,
+                color: '#ffff00'
+            });
+        }
+    }
+    
+    updateParticles() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const particle = this.particles[i];
+            
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.life -= 0.02;
+            particle.vx *= 0.98; // friction
+            particle.vy *= 0.98;
+            
+            if (particle.life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+    }
+    
+    getDistance(x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 }
 

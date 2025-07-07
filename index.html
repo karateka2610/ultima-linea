@@ -130,19 +130,19 @@
             position: absolute;
             bottom: 20px;
             right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
         
         .mobile-btn {
-            width: 60px;
-            height: 60px;
+            width: 55px;
+            height: 55px;
             background: rgba(255, 255, 255, 0.1);
             border: 2px solid #666;
             border-radius: 50%;
             color: white;
-            font-size: 12px;
+            font-size: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -255,6 +255,8 @@
         <div class="ui">
             <button id="stun-btn" class="button">Aturdir (Q)</button>
             <button id="reload-btn" class="button">Recargar (E)</button>
+            <button id="dash-btn" class="button">Dash (F)</button>
+            <button id="shield-btn" class="button">Escudo (C)</button>
             <div>
                 <span>Energía: <span id="energy">100</span>%</span>
             </div>
@@ -265,6 +267,8 @@
             <div>WASD - Mover</div>
             <div>Q - Aturdir enemigos (cooldown 3s)</div>
             <div>E - Recargar energía (cooldown 5s)</div>
+            <div>F - Dash rápido (cooldown 4s)</div>
+            <div>C - Escudo protector (cooldown 8s)</div>
             <div>ESPACIO - Pausar/Reanudar</div>
         </div>
         
@@ -278,6 +282,8 @@
             <div class="mobile-buttons">
                 <button id="mobile-stun" class="mobile-btn">STUN</button>
                 <button id="mobile-reload" class="mobile-btn">RELOAD</button>
+                <button id="mobile-dash" class="mobile-btn">DASH</button>
+                <button id="mobile-shield" class="mobile-btn">SHIELD</button>
                 <button id="mobile-pause" class="mobile-btn">PAUSE</button>
             </div>
         </div>
