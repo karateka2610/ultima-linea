@@ -86,8 +86,8 @@ class Game {
         // Input
         this.keys = {};
         
-        // Mobile touch controls
-        this.isMobile = this.detectMobile();
+        // Debug mode for showing hitboxes (comment out for production)
+        this.showHitboxes = false; // Set to true to see actual collision areas
         this.touchInput = {
             x: 0,
             y: 0,
@@ -96,6 +96,9 @@ class Game {
         this.joystickCenter = { x: 60, y: 60 };
         this.joystickRadius = 50;
         this.isDragging = false;
+        
+        // Mobile touch controls
+        this.isMobile = this.detectMobile();
         
         this.initializeEventListeners();
         this.updateUI();
@@ -514,14 +517,19 @@ class Game {
     }
     
     checkCollisions() {
-        // Check enemy collisions
+        // Check enemy collisions with generous hitboxes (smaller than visual)
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
             const dx = this.player.x - enemy.x;
             const dy = this.player.y - enemy.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
-            if (distance < this.player.size + enemy.size) {
+            // Use smaller hitbox for more generous collision detection
+            // Visual size vs actual collision size ratio: ~70%
+            const playerHitbox = this.player.size * 0.6; // Smaller player hitbox
+            const enemyHitbox = enemy.size * 0.7; // Smaller enemy hitbox
+            
+            if (distance < playerHitbox + enemyHitbox) {
                 if (this.hasShield) {
                     // Shield absorbs the hit
                     this.hasShield = false;
@@ -534,14 +542,18 @@ class Game {
             }
         }
         
-        // Check projectile collisions
+        // Check projectile collisions with even more generous hitboxes
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const projectile = this.projectiles[i];
             const dx = this.player.x - projectile.x;
             const dy = this.player.y - projectile.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
-            if (distance < this.player.size + projectile.size) {
+            // Very generous hitbox for projectiles (60% of visual size)
+            const playerHitbox = this.player.size * 0.5;
+            const projectileHitbox = projectile.size * 0.6;
+            
+            if (distance < playerHitbox + projectileHitbox) {
                 if (this.hasShield) {
                     // Shield absorbs the projectile
                     this.projectiles.splice(i, 1);
@@ -840,6 +852,11 @@ class Game {
         
         // Draw player
         this.drawPlayer();
+        
+        // Draw debug hitboxes if enabled
+        if (this.showHitboxes) {
+            this.drawHitboxes();
+        }
         
         // Draw effects
         if (this.isStunActive) {
@@ -1152,9 +1169,11 @@ class Game {
             powerUp.animationTime += 0.1;
             powerUp.glowIntensity = Math.sin(powerUp.animationTime) * 0.5 + 0.5;
             
-            // Check if player collects it
+            // Check if player collects it with generous collection radius
             const distance = this.getDistance(powerUp.x, powerUp.y, this.player.x, this.player.y);
-            if (distance < powerUp.size) {
+            const collectionRadius = powerUp.size * 1.2; // 20% larger collection area
+            
+            if (distance < collectionRadius) {
                 this.collectPowerUp(powerUp);
                 this.powerUps.splice(i, 1);
             }
@@ -1205,6 +1224,39 @@ class Game {
         const dx = x2 - x1;
         const dy = y2 - y1;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+    
+    drawHitboxes() {
+        // Draw player hitbox
+        this.ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.arc(this.player.x, this.player.y, this.player.size * 0.6, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
+        // Draw enemy hitboxes
+        this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        for (const enemy of this.enemies) {
+            this.ctx.beginPath();
+            this.ctx.arc(enemy.x, enemy.y, enemy.size * 0.7, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+        
+        // Draw projectile hitboxes
+        this.ctx.strokeStyle = 'rgba(0, 0, 255, 0.5)';
+        for (const projectile of this.projectiles) {
+            this.ctx.beginPath();
+            this.ctx.arc(projectile.x, projectile.y, projectile.size * 0.6, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+        
+        // Draw power-up collection areas
+        this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.3)';
+        for (const powerUp of this.powerUps) {
+            this.ctx.beginPath();
+            this.ctx.arc(powerUp.x, powerUp.y, powerUp.size * 1.2, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
     }
 }
 
