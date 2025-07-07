@@ -67,6 +67,38 @@ Sobrevive el mayor tiempo posible evitando que los enemigos te toquen. Gestiona 
 - ✅ Tablets
 - ✅ Escritorio
 
+## 🚀 Planes Futuros
+
+### 🎨 Interfaz y UX
+- [ ] **Pantalla de inicio** con menú principal
+- [ ] **Sistema de puntuación** y leaderboards locales
+- [ ] **Configuraciones** de audio y controles
+- [ ] **Tutorial interactivo** para nuevos jugadores
+
+### 🎵 Audio y Efectos
+- [ ] **Música de fondo** atmosférica
+- [ ] **Efectos de sonido** para habilidades y colisiones
+- [ ] **Audio espacial** para enemigos cercanos
+- [ ] **Feedback háptico** en móviles
+
+### 📱 Optimización Móvil
+- [ ] **Conversión a APK** con Capacitor
+- [ ] **Optimización de rendimiento** para dispositivos de gama baja
+- [ ] **Controles mejorados** con gestos
+- [ ] **Distribución en tiendas** (Google Play, App Store)
+
+### 🎯 Gameplay Expandido
+- [ ] **Nuevos enemigos**: Voladores, Tanques, Explosivos
+- [ ] **Power-ups adicionales**: Velocidad, Salud máxima, Multiplicador
+- [ ] **Sistema de logros** y desbloqueos
+- [ ] **Modos de juego**: Supervivencia, Desafío diario, Arena
+
+### 🛠️ Tecnología
+- [ ] **Migración a TypeScript** para mejor desarrollo
+- [ ] **Sistema de módulos** para escalabilidad
+- [ ] **PWA completa** con instalación offline
+- [ ] **Integración con APIs** para estadísticas online
+
 ---
 
 Desarrollado con ❤️ para la diversión arcade
