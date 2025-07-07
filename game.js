@@ -88,6 +88,13 @@ class Game {
         
         // Debug mode for showing hitboxes (comment out for production)
         this.showHitboxes = false; // Set to true to see actual collision areas
+        
+        // Expose game instance to window for console commands
+        window.game = this;
+        
+        // Register console commands
+        this.registerConsoleCommands();
+        
         this.touchInput = {
             x: 0,
             y: 0,
@@ -517,6 +524,9 @@ class Game {
     }
     
     checkCollisions() {
+        // Skip collisions if god mode is enabled
+        if (this.godModeEnabled) return;
+        
         // Check enemy collisions with generous hitboxes (smaller than visual)
         for (let i = this.enemies.length - 1; i >= 0; i--) {
             const enemy = this.enemies[i];
@@ -895,6 +905,12 @@ class Game {
     }
     
     drawPlayer() {
+        // God mode visual effect
+        if (this.godModeEnabled) {
+            this.ctx.shadowColor = '#FFD700';
+            this.ctx.shadowBlur = 15;
+        }
+        
         this.ctx.fillStyle = this.player.color;
         this.ctx.fillRect(
             this.player.x - this.player.size / 2,
@@ -902,6 +918,9 @@ class Game {
             this.player.size,
             this.player.size
         );
+        
+        // Reset shadow
+        this.ctx.shadowBlur = 0;
         
         // Draw energy bar
         const barWidth = this.player.size * 2;
@@ -915,6 +934,14 @@ class Game {
         const energyWidth = (this.player.energy / this.player.maxEnergy) * barWidth;
         this.ctx.fillStyle = this.player.energy > 30 ? '#00ff00' : '#ff4444';
         this.ctx.fillRect(barX, barY, energyWidth, barHeight);
+        
+        // God mode text indicator
+        if (this.godModeEnabled) {
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.font = '12px Courier New';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('GOD MODE', this.player.x, this.player.y - this.player.size - 20);
+        }
     }
     
     drawEnemy(enemy) {
@@ -1257,6 +1284,88 @@ class Game {
             this.ctx.arc(powerUp.x, powerUp.y, powerUp.size * 1.2, 0, Math.PI * 2);
             this.ctx.stroke();
         }
+    }
+    
+    registerConsoleCommands() {
+        // Console commands for debugging and testing
+        window.showHitboxes = (value) => {
+            if (value === undefined) {
+                console.log(`Hitboxes are currently ${this.showHitboxes ? 'ON' : 'OFF'}`);
+                console.log('Usage: showHitboxes(true) or showHitboxes(false)');
+                return this.showHitboxes;
+            }
+            this.showHitboxes = Boolean(value);
+            console.log(`Hitboxes ${this.showHitboxes ? 'enabled' : 'disabled'}`);
+            return this.showHitboxes;
+        };
+        
+        window.gameSpeed = (multiplier) => {
+            if (multiplier === undefined) {
+                console.log('Current game speed is normal (1x)');
+                console.log('Usage: gameSpeed(2) for 2x speed, gameSpeed(0.5) for slow motion');
+                return 1;
+            }
+            // Apply speed multiplier to enemy spawn rates and movement
+            this.enemySpawnRate = 1000 / multiplier;
+            this.projectileSpeed = 2 * multiplier;
+            for (let enemy of this.enemies) {
+                enemy.speed = enemy.speed * multiplier;
+            }
+            console.log(`Game speed set to ${multiplier}x`);
+            return multiplier;
+        };
+        
+        window.giveEnergy = (amount = 50) => {
+            this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + amount);
+            console.log(`Added ${amount} energy. Current energy: ${this.player.energy}`);
+            return this.player.energy;
+        };
+        
+        window.clearEnemies = () => {
+            const count = this.enemies.length;
+            this.enemies = [];
+            this.projectiles = [];
+            console.log(`Cleared ${count} enemies and all projectiles`);
+            return count;
+        };
+        
+        window.spawnPowerUp = () => {
+            this.spawnPowerUp();
+            console.log('Power-up spawned!');
+            return true;
+        };
+        
+        window.godMode = (enabled) => {
+            if (enabled === undefined) {
+                console.log(`God mode is currently ${this.godModeEnabled ? 'ON' : 'OFF'}`);
+                console.log('Usage: godMode(true) or godMode(false)');
+                return this.godModeEnabled;
+            }
+            this.godModeEnabled = Boolean(enabled);
+            console.log(`God mode ${this.godModeEnabled ? 'enabled' : 'disabled'}`);
+            return this.godModeEnabled;
+        };
+        
+        window.help = () => {
+            console.log('🎮 Última Línea - Console Commands:');
+            console.log('');
+            console.log('showHitboxes(true/false) - Toggle collision box visibility');
+            console.log('gameSpeed(number) - Change game speed (1 = normal, 2 = fast, 0.5 = slow)');
+            console.log('giveEnergy(amount) - Add energy to player (default: 50)');
+            console.log('clearEnemies() - Remove all enemies and projectiles');
+            console.log('spawnPowerUp() - Spawn a power-up immediately');
+            console.log('godMode(true/false) - Toggle invincibility');
+            console.log('help() - Show this help message');
+            console.log('');
+            console.log('Example: showHitboxes(true)');
+            return 'Help displayed';
+        };
+        
+        // Initialize god mode
+        this.godModeEnabled = false;
+        
+        // Show available commands on startup
+        console.log('🎮 Última Línea loaded! Type help() for console commands.');
     }
 }
 
