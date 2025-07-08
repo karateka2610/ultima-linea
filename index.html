@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Última Línea - Survival Game</title>
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    
+    <meta name="description" content="Última Línea - Juego de supervivencia modular en HTML5. Sobrevive oleadas infinitas de enemigos usando habilidades estratégicas.">
+    <meta name="keywords" content="juego, html5, canvas, supervivencia, javascript, modular">
+    <meta name="author" content="Elias">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Última Línea - Survival Game">
+    <meta property="og:description" content="Un juego de supervivencia modular en HTML5 donde debes sobrevivir oleadas infinitas de enemigos">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="http://localhost:9000">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+    <div class="game-container">
+        <h1>ÚLTIMA LÍNEA</h1>
+        
+        <div class="ui">
+            <div>
+                <span>Oleada: <span id="wave">1</span></span>
+            </div>
+            <div>
+                <span>Tiempo: <span id="timer">0</span>s</span>
+            </div>
+            <div>
+                <span>Enemigos: <span id="enemies">0</span></span>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div class="ui">
+            <button id="stun-btn" class="button" style="display: none;">Aturdir (Q)</button>
+            <button id="reload-btn" class="button" style="display: none;">Recarga (E)</button>
+            <button id="dash-btn" class="button" style="display: none;">Dash (F)</button>
+            <button id="shield-btn" class="button" style="display: none;">Escudo (C)</button>
+            <button id="heal-btn" class="button" style="display: none;">SuperRecarga (H)</button>
+            <button id="speed-btn" class="button" style="display: none;">Velocidad (V)</button>
+            <button id="multiStun-btn" class="button" style="display: none;">Multi-Stun (Z)</button>
+            <button id="reflect-btn" class="button" style="display: none;">Reflejo (X)</button>
+            <div>
+                <span>Energía: <span id="energy">100</span>%</span>
+            </div>
+        </div>
+        
+        <!-- Progression UI -->
+        <div class="progression-ui">
+            <div class="progress-info">
+                <span>Ronda: <span id="player-level">1</span></span>
+            </div>
+        </div>
+        
+        <!-- Wave Completion Modal -->
+        <div id="level-up-modal" class="level-up-modal" style="display: none;">
+            <div class="modal-content">
+                <h2>¡RONDA COMPLETADA!</h2>
+                <p>Ronda <span id="new-level">2</span> iniciada</p>
+                <p class="modal-subtitle">Elige una habilidad:</p>
+                <div id="ability-cards" class="ability-cards">
+                    <!-- Se llenará dinámicamente con las cartas de habilidades -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="game-over" class="game-over">
+            <h2>GAME OVER</h2>
+            <p>Has sobrevivido <span id="final-time">0</span> segundos</p>
+            <p>Oleadas completadas: <span id="final-waves">0</span></p>
+            <button id="restart-btn" class="button">Reiniciar (R)</button>
+        </div>
+        
+        <!-- Game Stats Panel -->
+        <div id="stats-panel" class="stats-panel" style="display: none;">
+            <h3>📊 Estadísticas del Servidor</h3>
+            <div id="server-stats">
+                <p>Estado: <span id="server-status">Cargando...</span></p>
+                <p>Uptime: <span id="server-uptime">-</span></p>
+                <p>Versión: <span id="server-version">-</span></p>
+            </div>
+            <button id="close-stats" class="button">Cerrar</button>
+        </div>
+        
+        <!-- Performance Monitor -->
+        <div id="performance-monitor" class="performance-monitor">
+            <div>FPS: <span id="fps-counter">60</span></div>
+            <div>Ping: <span id="ping-display">-</span>ms</div>
+        </div>
+        
+    <!-- Debug Controls -->
+    <div id="debug-controls" class="debug-controls">
+        <button id="hitbox-toggle" class="debug-btn" title="Mostrar/Ocultar Hitboxes">🎯</button>
+        <button id="god-mode-toggle" class="debug-btn" title="Modo Dios">👑</button>
+    </div>
+    
+    <!-- Mobile Controls -->
+    <div id="mobile-controls" class="mobile-controls" style="display: none;">
+        <!-- Virtual Joystick -->
+        <div class="joystick-base" id="joystick-base">
+            <div class="joystick-knob" id="joystick-knob"></div>
+        </div>
+        
+        <!-- Ability Buttons -->
+        <div class="mobile-abilities">
+            <button id="mobile-stun" class="mobile-btn">⚡</button>
+            <button id="mobile-reload" class="mobile-btn">🔄</button>
+            <button id="mobile-dash" class="mobile-btn">💨</button>
+            <button id="mobile-shield" class="mobile-btn">🛡️</button>
+            <button id="mobile-heal" class="mobile-btn">💚</button>
+            <button id="mobile-speed" class="mobile-btn">⚡</button>
+            <button id="mobile-multiStun" class="mobile-btn">💥</button>
+            <button id="mobile-reflect" class="mobile-btn">🔄</button>
+        </div>
+        
+        <!-- Fire Button -->
+        <div class="fire-button" id="fire-button">🔥</div>
+    </div>
+    </div>
+    
+    <!-- Stats toggle button -->
+    <button id="stats-toggle" class="stats-toggle">📊</button>
+    
+    <script src="src/ui-scripts.js"></script>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
