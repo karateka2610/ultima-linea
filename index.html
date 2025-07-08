@@ -107,25 +107,27 @@
     
     <!-- Mobile Controls -->
     <div id="mobile-controls" class="mobile-controls" style="display: none;">
-        <!-- Virtual Joystick -->
-        <div class="joystick-base" id="joystick-base">
-            <div class="joystick-knob" id="joystick-knob"></div>
-        </div>
-        
-        <!-- Ability Buttons -->
+        <!-- Ability Buttons - Top Row -->
         <div class="mobile-abilities">
-            <button id="mobile-stun" class="mobile-btn">⚡</button>
-            <button id="mobile-reload" class="mobile-btn">🔄</button>
-            <button id="mobile-dash" class="mobile-btn">💨</button>
-            <button id="mobile-shield" class="mobile-btn">🛡️</button>
-            <button id="mobile-heal" class="mobile-btn">💚</button>
-            <button id="mobile-speed" class="mobile-btn">⚡</button>
-            <button id="mobile-multiStun" class="mobile-btn">💥</button>
-            <button id="mobile-reflect" class="mobile-btn">🔄</button>
+            <button id="mobile-stun" class="mobile-btn" title="Stun (Q)">⚡</button>
+            <button id="mobile-reload" class="mobile-btn" title="Reload (E)">🔄</button>
+            <button id="mobile-dash" class="mobile-btn" title="Dash (F)">💨</button>
+            <button id="mobile-shield" class="mobile-btn" title="Shield (C)">🛡️</button>
+            <button id="mobile-heal" class="mobile-btn" title="Heal (H)">💚</button>
+            <button id="mobile-speed" class="mobile-btn" title="Speed (V)">⚡</button>
+            <button id="mobile-multiStun" class="mobile-btn" title="Multi-Stun (Z)">💥</button>
+            <button id="mobile-reflect" class="mobile-btn" title="Reflect (X)">🔄</button>
         </div>
         
-        <!-- Fire Button -->
-        <div class="fire-button" id="fire-button">🔥</div>
+        <!-- Virtual Joystick - Bottom Left -->
+        <div class="joystick-container">
+            <div class="joystick-base" id="joystick-base">
+                <div class="joystick-knob" id="joystick-knob"></div>
+            </div>
+        </div>
+        
+        <!-- Fire Button - Bottom Right -->
+        <div class="fire-button" id="fire-button" title="Disparar">🔥</div>
     </div>
     </div>
     
