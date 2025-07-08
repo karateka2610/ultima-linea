@@ -97,13 +97,13 @@ export const KEYS = {
     MOVE_LEFT: ['a', 'arrowleft'],
     MOVE_RIGHT: ['d', 'arrowright'],
     STUN: ['q'],
-    RELOAD: ['e'],
-    DASH: ['f'],
-    SHIELD: ['c'],
+    RELOAD: ['r'], // Recarga ahora en R
+    DASH: ['shift', 'f'], // Shift o F para dash
+    SHIELD: ['e'], // Escudo en E
     HEAL: ['h'],
     SPEED: ['v'],
     MULTI_STUN: ['z'],
     REFLECT: ['x'],
-    PAUSE: [' '],
-    RESTART: ['r']
+    PAUSE: ['p', 'escape'], // Pausa en P o Escape
+    RESTART: ['enter'] // Reinicio en Enter
 };

@@ -45,19 +45,19 @@ export class InputSystem {
         this.keys[e.key.toLowerCase()] = true;
 
         // Check for ability triggers
-        if (isKeyPressed(KEYS.STUN, this.keys)) this.abilities.stun = true;
-        if (isKeyPressed(KEYS.RELOAD, this.keys)) this.abilities.reload = true;
-        if (isKeyPressed(KEYS.DASH, this.keys)) this.abilities.dash = true;
-        if (isKeyPressed(KEYS.SHIELD, this.keys)) this.abilities.shield = true;
-        if (isKeyPressed(KEYS.HEAL, this.keys)) this.abilities.heal = true;
-        if (isKeyPressed(KEYS.SPEED, this.keys)) this.abilities.speed = true;
-        if (isKeyPressed(KEYS.MULTI_STUN, this.keys)) this.abilities.multiStun = true;
-        if (isKeyPressed(KEYS.REFLECT, this.keys)) this.abilities.reflect = true;
+        this.abilities.stun = isKeyPressed(KEYS.STUN, this.keys);
+        this.abilities.reload = isKeyPressed(KEYS.RELOAD, this.keys);
+        this.abilities.dash = isKeyPressed(KEYS.DASH, this.keys);
+        this.abilities.shield = isKeyPressed(KEYS.SHIELD, this.keys);
+        this.abilities.heal = isKeyPressed(KEYS.HEAL, this.keys);
+        this.abilities.speed = isKeyPressed(KEYS.SPEED, this.keys);
+        this.abilities.multiStun = isKeyPressed(KEYS.MULTI_STUN, this.keys);
+        this.abilities.reflect = isKeyPressed(KEYS.REFLECT, this.keys);
         if (isKeyPressed(KEYS.PAUSE, this.keys)) {
             e.preventDefault();
             this.abilities.pause = true;
         }
-        if (isKeyPressed(KEYS.RESTART, this.keys)) this.abilities.restart = true;
+        this.abilities.restart = isKeyPressed(KEYS.RESTART, this.keys);
     }
 
     handleKeyUp(e) {
