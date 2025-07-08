@@ -2,6 +2,14 @@
 
 Un juego de supervivencia roguelike modular en HTML5 donde debes sobrevivir oleadas infinitas de enemigos usando habilidades estratégicas. Sistema de progresión por rondas con selector de cartas horizontal e iconos SVG personalizados.
 
+## 🚀 **¡JUEGA AHORA!**
+
+### 🎯 **[👉 CLICK AQUÍ PARA JUGAR 👈](https://karateka2610.github.io/ultima-linea/)**
+
+> 🎮 **Instrucciones rápidas:** Muévete con WASD, dispara con clic, usa habilidades con Q/E/F/C/H/V/Z/X. ¡Sobrevive oleadas infinitas y mejora tus habilidades al completar cada ronda!
+
+---
+
 ## ✨ Características Principales
 
 ### 🎯 **Sistema Roguelike**
