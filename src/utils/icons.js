@@ -84,14 +84,14 @@ export class IconManager {
         // Asegurar que el SVG tenga las dimensiones correctas
         svgText = svgText.replace(/<svg[^>]*>/, (match) => {
             return match.replace(/width="[^"]*"/, 'width="48"')
-                       .replace(/height="[^"]*"/, 'height="48"')
-                       .replace(/viewBox="[^"]*"/, 'viewBox="0 0 512 512"');
+                .replace(/height="[^"]*"/, 'height="48"')
+                .replace(/viewBox="[^"]*"/, 'viewBox="0 0 512 512"');
         });
 
         // Aplicar color personalizado
         svgText = svgText.replace(/fill="[^"]*"/g, `fill="${color}"`);
         svgText = svgText.replace(/stroke="[^"]*"/g, `stroke="${color}"`);
-        
+
         // Si no tiene atributos de color, añadirlos
         if (!svgText.includes('fill=') && !svgText.includes('stroke=')) {
             svgText = svgText.replace(/<path/g, `<path fill="${color}"`);
@@ -108,7 +108,7 @@ export class IconManager {
     getDefaultIcon(abilityName) {
         const iconData = this.icons[abilityName];
         const color = iconData ? iconData.color : '#ffffff';
-        
+
         // Iconos SVG personalizados para cada habilidad
         const customIcons = {
             stun: `
@@ -184,7 +184,7 @@ export class IconManager {
                 </svg>
             `
         };
-        
+
         return customIcons[abilityName] || `
             <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="24" cy="24" r="20" fill="none" stroke="${color}" stroke-width="2"/>
@@ -239,7 +239,7 @@ export class IconManager {
                 const icon = this.getDefaultIcon(abilityName);
                 this.iconCache.set(abilityName, icon);
             });
-            
+
             console.log('All ability icons preloaded successfully');
         } catch (error) {
             console.warn('Some icons failed to preload:', error);

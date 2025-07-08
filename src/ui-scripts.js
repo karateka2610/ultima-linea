@@ -91,27 +91,6 @@ function formatUptime(milliseconds) {
     }
 }
 
-// Ping monitor
-function startPingMonitor() {
-    setInterval(async () => {
-        try {
-            const startTime = performance.now();
-            await fetch('/api/stats');
-            const endTime = performance.now();
-            const ping = Math.round(endTime - startTime);
-            const pingElement = document.getElementById('ping-display');
-            if (pingElement) {
-                pingElement.textContent = ping;
-            }
-        } catch (error) {
-            const pingElement = document.getElementById('ping-display');
-            if (pingElement) {
-                pingElement.textContent = '∞';
-            }
-        }
-    }, 5000);
-}
-
 // Debug functionality
 let hitboxesVisible = false;
 let godModeEnabled = false;

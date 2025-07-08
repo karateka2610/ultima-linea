@@ -8,17 +8,17 @@ export class GameSystem {
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
         this.renderer = null; // Will be set later
-        
+
         // Game state
         this.currentWave = 1;
         this.enemies = [];
         this.projectiles = [];
         this.powerUps = [];
         this.particles = [];
-        
+
         // Debug state
         this.godModeEnabled = false;
-        
+
         // Wave management
         this.waveEnemyCount = GAME_CONFIG.WAVE.INITIAL_ENEMY_COUNT;
         this.enemiesSpawnedThisWave = 0;
@@ -26,12 +26,12 @@ export class GameSystem {
         this.enemySpawnRate = GAME_CONFIG.ENEMIES.INITIAL_SPAWN_RATE;
         this.lastEnemySpawn = 0;
         this.lastPowerUpSpawn = 0;
-        
+
         // Effects
         this.dangerLevel = 0;
         this.screenShake = false;
     }
-    
+
     update(deltaTime, player, currentTime) {
         this.updateEnemies(player, currentTime);
         this.updateProjectiles();
@@ -43,31 +43,31 @@ export class GameSystem {
         this.updateEffects(player);
         this.checkCollisions(player);
     }
-    
+
     updateEnemies(player, currentTime) {
         this.enemies.forEach(enemy => {
             enemy.update(player, currentTime, this.projectiles);
         });
     }
-    
+
     updateProjectiles() {
         for (let i = this.projectiles.length - 1; i >= 0; i--) {
             const projectile = this.projectiles[i];
-            
+
             projectile.x += projectile.dirX * projectile.speed;
             projectile.y += projectile.dirY * projectile.speed;
-            
+
             if (this.isOffScreen(projectile.x, projectile.y)) {
                 this.projectiles.splice(i, 1);
             }
         }
     }
-    
+
     updatePowerUps(player) {
         for (let i = this.powerUps.length - 1; i >= 0; i--) {
             const powerUp = this.powerUps[i];
             powerUp.update();
-            
+
             const distance = getDistance(powerUp.x, powerUp.y, player.x, player.y);
             if (distance < powerUp.getCollectionRadius()) {
                 player.collectPowerUp(powerUp);
@@ -76,7 +76,7 @@ export class GameSystem {
             }
         }
     }
-    
+
     updateParticles() {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             this.particles[i].update();
@@ -85,20 +85,20 @@ export class GameSystem {
             }
         }
     }
-    
+
     spawnEnemies(currentTime) {
-        if (currentTime - this.lastEnemySpawn > this.enemySpawnRate && 
+        if (currentTime - this.lastEnemySpawn > this.enemySpawnRate &&
             this.enemiesSpawnedThisWave < this.waveEnemyCount) {
-            
+
             const enemyType = this.getRandomEnemyType();
             const enemy = Enemy.spawnAtEdge(this.canvasWidth, this.canvasHeight, enemyType);
             this.enemies.push(enemy);
-            
+
             this.enemiesSpawnedThisWave++;
             this.lastEnemySpawn = currentTime;
         }
     }
-    
+
     spawnPowerUps(currentTime, player) {
         if (currentTime - this.lastPowerUpSpawn > GAME_CONFIG.POWERUPS.SPAWN_RATE) {
             const powerUp = PowerUp.spawnInSafeArea(this.canvasWidth, this.canvasHeight, player);
@@ -106,11 +106,11 @@ export class GameSystem {
             this.lastPowerUpSpawn = currentTime;
         }
     }
-    
+
     getRandomEnemyType() {
         const wave = this.currentWave;
         const rand = Math.random();
-        
+
         if (wave <= 2) {
             return 'basic';
         } else if (wave <= 5) {
@@ -121,42 +121,42 @@ export class GameSystem {
             else return 'shooter';
         }
     }
-    
+
     updateWaves(currentTime) {
         // Check if wave is complete
         if (this.enemiesSpawnedThisWave >= this.waveEnemyCount && this.enemies.length === 0) {
             this.startNextWave(currentTime);
         }
-        
+
         // Auto-advance wave after time limit
         if (currentTime - this.waveStartTime > GAME_CONFIG.WAVE.DURATION) {
             this.startNextWave(currentTime);
         }
     }
-    
+
     startNextWave(currentTime) {
         this.currentWave++;
-        this.waveEnemyCount = Math.min(GAME_CONFIG.WAVE.MAX_ENEMIES, 
-                                     this.waveEnemyCount + GAME_CONFIG.WAVE.ENEMY_COUNT_INCREMENT);
-        this.enemySpawnRate = Math.max(GAME_CONFIG.ENEMIES.MIN_SPAWN_RATE, 
-                                     this.enemySpawnRate - GAME_CONFIG.ENEMIES.SPAWN_RATE_DECREMENT);
-        
+        this.waveEnemyCount = Math.min(GAME_CONFIG.WAVE.MAX_ENEMIES,
+            this.waveEnemyCount + GAME_CONFIG.WAVE.ENEMY_COUNT_INCREMENT);
+        this.enemySpawnRate = Math.max(GAME_CONFIG.ENEMIES.MIN_SPAWN_RATE,
+            this.enemySpawnRate - GAME_CONFIG.ENEMIES.SPAWN_RATE_DECREMENT);
+
         this.enemiesSpawnedThisWave = 0;
         this.waveStartTime = currentTime;
         this.enemies = [];
     }
-    
+
     updateEffects(player) {
         let nearbyEnemies = 0;
         let closestDistance = Infinity;
-        
+
         for (const enemy of this.enemies) {
             const distance = getDistance(player.x, player.y, enemy.x, enemy.y);
-            
+
             if (distance < 100) nearbyEnemies++;
             closestDistance = Math.min(closestDistance, distance);
         }
-        
+
         // Update danger level
         if (nearbyEnemies >= 3 || closestDistance < 50) {
             this.dangerLevel = 2;
@@ -165,14 +165,14 @@ export class GameSystem {
         } else {
             this.dangerLevel = 0;
         }
-        
+
         this.updateCanvasEffects();
     }
-    
+
     updateCanvasEffects() {
         const canvas = document.getElementById('gameCanvas');
         canvas.className = '';
-        
+
         if (this.dangerLevel === 2) {
             canvas.classList.add('canvas-danger', 'vibrate');
             this.screenShake = true;
@@ -183,23 +183,23 @@ export class GameSystem {
             this.screenShake = false;
         }
     }
-    
+
     checkCollisions(player) {
         // Check enemy collisions first
         const enemyCollision = this.checkEnemyCollisions(player);
         if (enemyCollision) {
             return true; // Game over
         }
-        
+
         // Check projectile collisions
         const projectileCollision = this.checkProjectileCollisions(player);
         if (projectileCollision) {
             return true; // Game over
         }
-        
+
         return false; // No collisions
     }
-     checkEnemyCollisions(player) {
+    checkEnemyCollisions(player) {
         // Skip collisions if god mode is enabled
         const godModeEnabled = this.renderer ? this.renderer.godModeEnabled : false;
         if (godModeEnabled) return false;
@@ -208,12 +208,12 @@ export class GameSystem {
             const enemy = this.enemies[i];
             const distance = getDistance(player.x, player.y, enemy.x, enemy.y);
             const collisionDistance = player.getHitboxRadius() + enemy.getHitboxRadius();
-            
+
             if (distance < collisionDistance) {
                 console.log(`🎯 Colisión detectada! Distancia: ${distance.toFixed(2)}, Necesaria: ${collisionDistance.toFixed(2)}`);
                 console.log(`Player: (${Math.floor(player.x)}, ${Math.floor(player.y)}) radio: ${player.getHitboxRadius()}`);
                 console.log(`Enemy: (${Math.floor(enemy.x)}, ${Math.floor(enemy.y)}) radio: ${enemy.getHitboxRadius()}`);
-                
+
                 if (player.hasShield) {
                     console.log('🛡️ Escudo absorbe el daño');
                     player.hasShield = false;
@@ -227,7 +227,7 @@ export class GameSystem {
                         player.isInvulnerable = true;
                         player.invulnerabilityStartTime = Date.now();
                         this.enemies.splice(i, 1); // Remove enemy after collision
-                        
+
                         // If energy reaches 0, signal game over
                         if (player.energy <= 0) {
                             console.log('💀 Energía agotada - game over');
@@ -241,7 +241,7 @@ export class GameSystem {
         }
         return false;
     }
-     checkProjectileCollisions(player) {
+    checkProjectileCollisions(player) {
         // Skip projectile collisions if god mode is enabled
         const godModeEnabled = this.renderer ? this.renderer.godModeEnabled : false;
         if (godModeEnabled) return false;
@@ -253,7 +253,7 @@ export class GameSystem {
 
             if (distance < collisionDistance) {
                 console.log(`🎯 Proyectil colisionó! Distancia: ${distance.toFixed(2)}, Necesaria: ${collisionDistance.toFixed(2)}`);
-                
+
                 if (player.hasShield) {
                     console.log('🛡️ Escudo bloquea proyectil');
                     this.projectiles.splice(i, 1);
@@ -263,7 +263,7 @@ export class GameSystem {
                     // Reduce energy instead of instant death
                     player.energy = Math.max(0, player.energy - 15);
                     this.projectiles.splice(i, 1); // Remove projectile after collision
-                    
+
                     // If energy reaches 0, signal game over
                     if (player.energy <= 0) {
                         console.log('💀 Energía agotada por proyectil - game over');
@@ -278,11 +278,11 @@ export class GameSystem {
         }
         return false;
     }
-    
+
     isOffScreen(x, y) {
         return x < -10 || x > this.canvasWidth + 10 || y < -10 || y > this.canvasHeight + 10;
     }
-    
+
     reset() {
         this.currentWave = 1;
         this.enemies = [];
@@ -295,7 +295,7 @@ export class GameSystem {
         this.dangerLevel = 0;
         this.screenShake = false;
         this.lastPowerUpSpawn = 0;
-        
+
         const canvas = document.getElementById('gameCanvas');
         canvas.className = '';
     }

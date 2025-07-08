@@ -5,7 +5,7 @@ export const GAME_CONFIG = {
         HEIGHT: 400,
         MOBILE_MAX_SIZE: 0.9
     },
-    
+
     PLAYER: {
         SIZE: 15,
         SPEED: 3,
@@ -13,7 +13,7 @@ export const GAME_CONFIG = {
         ENERGY_DRAIN_RATE: 0.05,
         COLOR: '#00ff00'
     },
-    
+
     ENEMIES: {
         INITIAL_SPAWN_RATE: 1000,
         INITIAL_SPEED: 1,
@@ -23,14 +23,14 @@ export const GAME_CONFIG = {
         SPEED_INCREMENT: 0.2,
         SPAWN_RATE_DECREMENT: 50
     },
-    
+
     WAVE: {
         INITIAL_ENEMY_COUNT: 5,
         ENEMY_COUNT_INCREMENT: 2,
         MAX_ENEMIES: 20,
         DURATION: 30000
     },
-    
+
     ABILITIES: {
         STUN: {
             COOLDOWN: 3000,
@@ -53,7 +53,7 @@ export const GAME_CONFIG = {
             ENERGY_COST: 25
         }
     },
-    
+
     POWERUPS: {
         SPAWN_RATE: 8000,
         SIZE: 16,
@@ -61,15 +61,15 @@ export const GAME_CONFIG = {
         ENERGY_BONUS: 30,
         COLLECTION_RADIUS_MULTIPLIER: 1.2
     },
-    
+
     PROJECTILES: {
         SPEED: 2,
         SIZE: 4,
         COLOR: '#00aaff'
     },
-    
+
     GRID_SIZE: 20,
-    
+
     ENEMY_TYPES: {
         BASIC: {
             COLOR: '#ff4444',

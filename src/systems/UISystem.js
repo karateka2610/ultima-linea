@@ -3,31 +3,31 @@ export class UISystem {
         this.startTime = 0;
         this.gameOverElement = document.getElementById('game-over');
     }
-    
+
     updateGameUI(currentWave, enemies, startTime) {
         const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        
+
         document.getElementById('wave').textContent = currentWave;
         document.getElementById('timer').textContent = elapsedTime;
         document.getElementById('enemies').textContent = enemies.length;
     }
-    
+
     updateEnergyUI(energy) {
         document.getElementById('energy').textContent = Math.floor(energy);
     }
-    
+
     showGameOver(startTime, currentWave) {
         const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        
+
         document.getElementById('final-time').textContent = elapsedTime;
         document.getElementById('final-waves').textContent = currentWave - 1;
         this.gameOverElement.style.display = 'block';
     }
-    
+
     hideGameOver() {
         this.gameOverElement.style.display = 'none';
     }
-    
+
     adjustCanvasSize(canvas) {
         if (this.detectMobile()) {
             const maxSize = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.6, 400);
@@ -37,12 +37,12 @@ export class UISystem {
             canvas.style.height = maxSize + 'px';
         }
     }
-    
+
     detectMobile() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                window.innerWidth <= 768;
     }
-    
+
     bindButtons(callbacks) {
         const bindButton = (id, callback) => {
             const button = document.getElementById(id);
@@ -50,7 +50,7 @@ export class UISystem {
                 button.addEventListener('click', callback);
             }
         };
-        
+
         bindButton('stun-btn', callbacks.stun);
         bindButton('reload-btn', callbacks.reload);
         bindButton('dash-btn', callbacks.dash);

@@ -15,16 +15,16 @@ export class ProgressionSystem {
             multiStun: { unlocked: false, level: 0, maxLevel: 2 },
             reflect: { unlocked: false, level: 0, maxLevel: 3 }
         };
-        
+
         // Experiencia y nivel del jugador
         this.experience = 0;
         this.level = 1;
         this.skillPoints = 0;
-        
+
         // Lista de habilidades por desbloquear (orden aleatorio cada partida)
         this.unlockOrder = this.generateRandomUnlockOrder();
         this.nextUnlockIndex = 0;
-        
+
         // Configuraciones de habilidades mejoradas
         this.abilityConfigs = {
             stun: {
@@ -86,14 +86,14 @@ export class ProgressionSystem {
                 durationBonus: 3000
             }
         };
-        
+
         // Efectos activos
         this.activeEffects = {
             speedBoost: { active: false, endTime: 0, multiplier: 1 },
             reflection: { active: false, endTime: 0, chance: 0 }
         };
     }
-    
+
     generateRandomUnlockOrder() {
         const abilities = ['stun', 'dash', 'shield', 'reload', 'heal', 'speed', 'energyBoost', 'multiStun', 'reflect'];
         // Shuffle array
@@ -103,44 +103,44 @@ export class ProgressionSystem {
         }
         return abilities;
     }
-    
+
     addExperience(amount) {
         this.experience += amount;
         const expNeeded = this.getExperienceNeeded();
-        
+
         if (this.experience >= expNeeded) {
             this.levelUp();
         }
     }
-    
+
     getExperienceNeeded() {
         return this.level * 100 + (this.level - 1) * 50; // Escalamiento exponencial
     }
-    
+
     levelUp() {
         this.experience = 0;
         this.level++;
-        
+
         // En lugar de dar skill points, generamos opciones de habilidades
         const abilityOptions = this.generateAbilityOptions();
-        
+
         return {
             levelUp: true,
             newLevel: this.level,
             abilityOptions: abilityOptions
         };
     }
-    
+
     generateAbilityOptions(count = 3) {
         const allAbilities = Object.keys(this.abilities);
         const options = [];
-        
+
         // Crear un pool de habilidades disponibles
         const availableAbilities = [];
-        
+
         allAbilities.forEach(abilityName => {
             const ability = this.abilities[abilityName];
-            
+
             if (!ability.unlocked) {
                 // Habilidad no desbloqueada - puede aparecer
                 availableAbilities.push({
@@ -159,11 +159,11 @@ export class ProgressionSystem {
                 });
             }
         });
-        
+
         // Seleccionar opciones basadas en rareza
         const selectedOptions = [];
         const usedAbilities = new Set();
-        
+
         for (let i = 0; i < count && availableAbilities.length > 0; i++) {
             const option = this.selectWeightedOption(availableAbilities, usedAbilities);
             if (option) {
@@ -171,10 +171,10 @@ export class ProgressionSystem {
                 usedAbilities.add(option.name);
             }
         }
-        
+
         return selectedOptions;
     }
-    
+
     getAbilityRarity(abilityName) {
         const rarities = {
             // Habilidades básicas (más comunes)
@@ -192,41 +192,41 @@ export class ProgressionSystem {
         };
         return rarities[abilityName] || 3;
     }
-    
+
     selectWeightedOption(availableAbilities, usedAbilities) {
         // Filtrar habilidades ya usadas en esta selección
-        const filteredAbilities = availableAbilities.filter(ability => 
+        const filteredAbilities = availableAbilities.filter(ability =>
             !usedAbilities.has(ability.name)
         );
-        
+
         if (filteredAbilities.length === 0) return null;
-        
+
         // Calcular pesos (rareza más alta = menos probable)
         const weights = filteredAbilities.map(ability => {
             const baseWeight = 10 - ability.rarity; // Rareza 1 = peso 9, rareza 5 = peso 5
             return Math.max(1, baseWeight);
         });
-        
+
         // Selección aleatoria ponderada
         const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
         let random = Math.random() * totalWeight;
-        
+
         for (let i = 0; i < filteredAbilities.length; i++) {
             random -= weights[i];
             if (random <= 0) {
                 return filteredAbilities[i];
             }
         }
-        
+
         return filteredAbilities[0]; // Fallback
     }
-    
+
     chooseAbilityOption(optionIndex, options) {
         if (!options || optionIndex >= options.length) return false;
-        
+
         const option = options[optionIndex];
         const ability = this.abilities[option.name];
-        
+
         if (option.type === 'unlock') {
             // Desbloquear nueva habilidad
             ability.unlocked = true;
@@ -245,10 +245,10 @@ export class ProgressionSystem {
                 newLevel: ability.level
             };
         }
-        
+
         return false;
     }
-    
+
     unlockRandomAbility() {
         if (this.nextUnlockIndex < this.unlockOrder.length) {
             const abilityName = this.unlockOrder[this.nextUnlockIndex];
@@ -258,35 +258,35 @@ export class ProgressionSystem {
         }
         return null;
     }
-    
+
     upgradeAbility(abilityName) {
         const ability = this.abilities[abilityName];
         if (!ability || !ability.unlocked || ability.level >= ability.maxLevel || this.skillPoints <= 0) {
             return false;
         }
-        
+
         ability.level++;
         this.skillPoints--;
         return true;
     }
-    
+
     getAbilityStats(abilityName) {
         const ability = this.abilities[abilityName];
         const config = this.abilityConfigs[abilityName];
-        
+
         if (!ability || !config || !ability.unlocked) {
             return null;
         }
-        
+
         const stats = {};
-        
+
         // Calcular estadísticas basadas en el nivel
         Object.keys(config).forEach(key => {
             if (key.startsWith('base')) {
                 const statName = key.replace('base', '').toLowerCase();
                 const bonusKey = key.replace('base', '') + 'Bonus';
                 const bonusKey2 = key.replace('base', '').toLowerCase() + 'Bonus';
-                
+
                 if (config[bonusKey] !== undefined) {
                     stats[statName] = config[key] + (config[bonusKey] * ability.level);
                 } else if (config[bonusKey2] !== undefined) {
@@ -296,103 +296,103 @@ export class ProgressionSystem {
                 }
             }
         });
-        
+
         return stats;
     }
-    
+
     update(currentTime) {
         // Actualizar efectos activos
         if (this.activeEffects.speedBoost.active && currentTime > this.activeEffects.speedBoost.endTime) {
             this.activeEffects.speedBoost.active = false;
             this.activeEffects.speedBoost.multiplier = 1;
         }
-        
+
         if (this.activeEffects.reflection.active && currentTime > this.activeEffects.reflection.endTime) {
             this.activeEffects.reflection.active = false;
             this.activeEffects.reflection.chance = 0;
         }
     }
-    
+
     activateSpeedBoost() {
         if (!this.abilities.speed.unlocked) return false;
-        
+
         const stats = this.getAbilityStats('speed');
         const currentTime = Date.now();
-        
+
         this.activeEffects.speedBoost = {
             active: true,
             endTime: currentTime + stats.duration,
             multiplier: 1 + stats.boost
         };
-        
+
         return true;
     }
-    
+
     activateReflection() {
         if (!this.abilities.reflect.unlocked) return false;
-        
+
         const stats = this.getAbilityStats('reflect');
         const currentTime = Date.now();
-        
+
         this.activeEffects.reflection = {
             active: true,
             endTime: currentTime + stats.duration,
             chance: stats.chance
         };
-        
+
         return true;
     }
-    
+
     getSpeedMultiplier() {
         return this.activeEffects.speedBoost.multiplier;
     }
-    
+
     getReflectionChance() {
         return this.activeEffects.reflection.chance;
     }
-    
+
     getMaxEnergy() {
         if (!this.abilities.energyBoost.unlocked) return GAME_CONFIG.PLAYER.MAX_ENERGY;
-        
+
         const stats = this.getAbilityStats('energyBoost');
         return GAME_CONFIG.PLAYER.MAX_ENERGY + stats.boost;
     }
-    
+
     getUnlockedAbilities() {
         return Object.keys(this.abilities).filter(name => this.abilities[name].unlocked);
     }
-    
+
     getAvailableUpgrades() {
         return Object.keys(this.abilities).filter(name => {
             const ability = this.abilities[name];
             return ability.unlocked && ability.level < ability.maxLevel;
         });
     }
-    
+
     reset() {
         // Reset para nueva partida
         Object.keys(this.abilities).forEach(name => {
             this.abilities[name].unlocked = false;
             this.abilities[name].level = 0;
         });
-        
+
         this.experience = 0;
         this.level = 1;
         this.skillPoints = 0;
         this.unlockOrder = this.generateRandomUnlockOrder();
         this.nextUnlockIndex = 0;
-        
+
         this.activeEffects = {
             speedBoost: { active: false, endTime: 0, multiplier: 1 },
             reflection: { active: false, endTime: 0, chance: 0 }
         };
     }
-    
+
     getAbilityOptionInfo(option) {
         const abilityName = option.name;
         const ability = this.abilities[abilityName];
         const config = this.abilityConfigs[abilityName];
-        
+
         const info = {
             name: abilityName,
             displayName: this.getAbilityDisplayName(abilityName),
@@ -404,10 +404,10 @@ export class ProgressionSystem {
             rarityName: this.getRarityName(this.getAbilityRarity(abilityName)),
             effects: this.getAbilityEffects(abilityName, option.type === 'unlock' ? 1 : ability.level + 1)
         };
-        
+
         return info;
     }
-    
+
     getAbilityDisplayName(abilityName) {
         const names = {
             stun: '⚡ Descarga Eléctrica',
@@ -422,7 +422,7 @@ export class ProgressionSystem {
         };
         return names[abilityName] || abilityName;
     }
-    
+
     getAbilityDescription(abilityName) {
         const descriptions = {
             stun: 'Libera una descarga eléctrica que aturde a todos los enemigos cercanos',
@@ -437,93 +437,102 @@ export class ProgressionSystem {
         };
         return descriptions[abilityName] || 'Habilidad misteriosa';
     }
-    
+
     getRarityName(rarity) {
         const rarityNames = {
             1: 'Común',
-            2: 'Poco Común', 
+            2: 'Poco Común',
             3: 'Raro',
             4: 'Épico',
             5: 'Legendario'
         };
         return rarityNames[rarity] || 'Desconocido';
     }
-    
+
     getAbilityEffects(abilityName, level) {
         const config = this.abilityConfigs[abilityName];
         if (!config) return [];
-        
+
         const effects = [];
-        
+
         switch (abilityName) {
-            case 'stun':
-                const duration = (config.baseDuration + config.levelBonus * (level - 1)) / 1000;
-                const radius = config.baseRadius + config.radiusBonus * (level - 1);
-                const cooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
-                effects.push(`Duración: ${duration}s`);
-                effects.push(`Radio: ${radius} píxeles`);
-                effects.push(`Cooldown: ${cooldown}s`);
-                break;
-                
-            case 'dash':
-                const distance = config.baseDistance + config.distanceBonus * (level - 1);
-                const dashCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
-                const invulnerability = (config.baseInvulnerability + config.invulnerabilityBonus * (level - 1)) / 1000;
-                effects.push(`Distancia: ${distance.toFixed(1)}x`);
-                effects.push(`Invulnerabilidad: ${invulnerability}s`);
-                effects.push(`Cooldown: ${dashCooldown}s`);
-                break;
-                
-            case 'shield':
-                const shieldDuration = (config.baseDuration + config.durationBonus * (level - 1)) / 1000;
-                const shieldCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
-                effects.push(`Duración: ${shieldDuration}s`);
-                effects.push(`Cooldown: ${shieldCooldown}s`);
-                if (level >= 3) effects.push('🌟 Refleja proyectiles');
-                break;
-                
-            case 'reload':
-                const heal = config.baseHeal + config.healBonus * (level - 1);
-                const reloadCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
-                effects.push(`Curación: ${heal} energía`);
-                effects.push(`Cooldown: ${reloadCooldown}s`);
-                break;
-                
-            case 'heal':
-                const healAmount = config.baseHeal + config.healBonus * (level - 1);
-                const healCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
-                effects.push(`Curación: ${healAmount} energía`);
-                effects.push(`Cooldown: ${healCooldown}s`);
-                break;
-                
-            case 'speed':
-                const speedBoost = ((config.baseBoost + config.boostBonus * (level - 1)) * 100).toFixed(0);
-                const speedDuration = (config.baseDuration + config.durationBonus * (level - 1)) / 1000;
-                effects.push(`Velocidad: +${speedBoost}%`);
-                effects.push(`Duración: ${speedDuration}s`);
-                break;
-                
-            case 'energyBoost':
-                const energyBoost = config.baseBoost + config.boostBonus * (level - 1);
-                effects.push(`Energía máxima: +${energyBoost}`);
-                effects.push('🌟 Efecto permanente');
-                break;
-                
-            case 'multiStun':
-                const pulses = config.baseCount + config.countBonus * (level - 1);
-                const multiCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
-                effects.push(`Pulsos: ${pulses} ondas`);
-                effects.push(`Cooldown: ${multiCooldown}s`);
-                break;
-                
-            case 'reflect':
-                const chance = ((config.baseChance + config.chanceBonus * (level - 1)) * 100).toFixed(0);
-                const reflectDuration = (config.baseDuration + config.durationBonus * (level - 1)) / 1000;
-                effects.push(`Probabilidad: ${chance}%`);
-                effects.push(`Duración: ${reflectDuration}s`);
-                break;
+        case 'stun': {
+            const duration = (config.baseDuration + config.levelBonus * (level - 1)) / 1000;
+            const radius = config.baseRadius + config.radiusBonus * (level - 1);
+            const cooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
+            effects.push(`Duración: ${duration}s`);
+            effects.push(`Radio: ${radius} píxeles`);
+            effects.push(`Cooldown: ${cooldown}s`);
+            break;
         }
-        
+
+        case 'dash': {
+            const distance = config.baseDistance + config.distanceBonus * (level - 1);
+            const dashCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
+            const invulnerability = (config.baseInvulnerability + config.invulnerabilityBonus * (level - 1)) / 1000;
+            effects.push(`Distancia: ${distance.toFixed(1)}x`);
+            effects.push(`Invulnerabilidad: ${invulnerability}s`);
+            effects.push(`Cooldown: ${dashCooldown}s`);
+            break;
+        }
+
+        case 'shield': {
+            const shieldDuration = (config.baseDuration + config.durationBonus * (level - 1)) / 1000;
+            const shieldCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
+            effects.push(`Duración: ${shieldDuration}s`);
+            effects.push(`Cooldown: ${shieldCooldown}s`);
+            if (level >= 3) effects.push('🌟 Refleja proyectiles');
+            break;
+        }
+
+        case 'reload': {
+            const heal = config.baseHeal + config.healBonus * (level - 1);
+            const reloadCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
+            effects.push(`Curación: ${heal} energía`);
+            effects.push(`Cooldown: ${reloadCooldown}s`);
+            break;
+        }
+
+        case 'heal': {
+            const healAmount = config.baseHeal + config.healBonus * (level - 1);
+            const healCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
+            effects.push(`Curación: ${healAmount} energía`);
+            effects.push(`Cooldown: ${healCooldown}s`);
+            break;
+        }
+
+        case 'speed': {
+            const speedBoost = ((config.baseBoost + config.boostBonus * (level - 1)) * 100).toFixed(0);
+            const speedDuration = (config.baseDuration + config.durationBonus * (level - 1)) / 1000;
+            effects.push(`Velocidad: +${speedBoost}%`);
+            effects.push(`Duración: ${speedDuration}s`);
+            break;
+        }
+
+        case 'energyBoost': {
+            const energyBoost = config.baseBoost + config.boostBonus * (level - 1);
+            effects.push(`Energía máxima: +${energyBoost}`);
+            effects.push('🌟 Efecto permanente');
+            break;
+        }
+
+        case 'multiStun': {
+            const pulses = config.baseCount + config.countBonus * (level - 1);
+            const multiCooldown = (config.baseCooldown - config.cooldownReduction * (level - 1)) / 1000;
+            effects.push(`Pulsos: ${pulses} ondas`);
+            effects.push(`Cooldown: ${multiCooldown}s`);
+            break;
+        }
+
+        case 'reflect': {
+            const chance = ((config.baseChance + config.chanceBonus * (level - 1)) * 100).toFixed(0);
+            const reflectDuration = (config.baseDuration + config.durationBonus * (level - 1)) / 1000;
+            effects.push(`Probabilidad: ${chance}%`);
+            effects.push(`Duración: ${reflectDuration}s`);
+            break;
+        }
+        }
+
         return effects;
     }
 }
